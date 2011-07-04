@@ -1,4 +1,4 @@
-module Mastermind where
+module Mastermind0 where
 
 import Data.List (sort, intersect)
 import Control.Monad (liftM)
