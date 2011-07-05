@@ -1,16 +1,24 @@
 import Mastermind
 
 
+strategyWithCheck :: Eq a => String -> Strategy a -> Strategy a
+strategyWithCheck patternName strategy pegCount pegColors askScore =
+  if length rows > 0 && snd (last rows) == Score pegCount 0
+    then rows
+    else error $ "Strategy could not arrive at a solution after " ++ 
+                 show (length rows) ++ " guesses for " ++
+                 patternName ++ "."
+  where rows = strategy pegCount pegColors askScore
+
+
 runStrategy :: (Eq a, Show a) => Strategy a ->
                                  Int -> PegColors a -> (Pattern a -> Score) ->
                                  IO ()
 runStrategy strategy pegCount pegColors askScore =
-  if length rows > 0 && snd (last rows) == Score pegCount 0
-    then do mapM_ print rows
-            putStrLn $ show (length rows) ++ " guesses."
-    else error $ "Strategy could not arrive at a solution after " ++ 
-                 show (length rows) ++ " guesses."
-  where rows = (strategy pegCount pegColors askScore)
+  do mapM_ print rows
+     putStrLn $ show (length rows) ++ " guesses."
+  where rows = strategyWithCheck "pattern" strategy
+                                 pegCount pegColors askScore
 
 
 strategyForAll :: (Eq a, Show a) => Strategy a ->
@@ -19,14 +27,10 @@ strategyForAll :: (Eq a, Show a) => Strategy a ->
 strategyForAll strategy pegCount pegColors =
   map rows targets
   where targets = allPatterns pegCount pegColors
-        rows p = let rs = strategy pegCount pegColors (calcScore p) in
-                 if length rs > 0 && snd (last rs) == Score pegCount 0
-                   then rs
-                   else error $ "Strategy could not arrive at a solution after " ++ 
-                                show (length rs) ++ " guesses for " ++
-                                show p
+        rows p = strategyWithCheck (show p) strategy
+                                   pegCount pegColors (calcScore p)
 
-                                
+
 runStrategyForAll :: (Eq a, Show a) => Strategy a ->
                                        Int -> PegColors a -> IO ()
 runStrategyForAll strategy pegCount pegColors =
